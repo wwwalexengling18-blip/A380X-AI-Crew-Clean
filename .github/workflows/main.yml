@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Python deps
         shell: cmd
         run: |
           @echo off
@@ -35,61 +35,46 @@ jobs:
           )
           pip install pyinstaller
 
+      - name: Build portable EXE (PyInstaller)
+        shell: cmd
+        run: |
+          @echo off
+          echo ==== CHECK FILES ====
+          dir
+          if not exist "tools\run_ai.py" (
+            echo ERROR: tools\run_ai.py nicht gefunden
+            echo TIP: Stelle sicher, dass die Datei im Repo-Root unter tools\run_ai.py liegt.
+            exit /b 1
+          )
 
-
-- name: Build portable EXE
-  shell: cmd
-  run: |
-    @echo off
-    echo ==== CHECK PROJECT ====
-    dir
-
-    if not exist "tools\run_ai.py" (
-      echo ERROR: tools\run_ai.py fehlt
-      exit /b 1
-    )
-
-    echo ==== CLEAN OLD BUILDS ====
-    rmdir /s /q dist 2>nul
-    rmdir /s /q build 2>nul
-
-    echo ==== BUILD EXE ====
-    pyinstaller --onefile --name A380X_AI tools\run_ai.py
-
-    echo ==== DIST CONTENT ====
-    dir dist /s
-
-    if exist "dist\A380X_AI.exe" (
-      echo EXE OK
-    ) else (
-      echo ERROR: EXE fehlt
-      exit /b 1
-    )
-
-    echo ==== BUILD STEP DONE ====
-
-
-      
-
+          echo ==== CLEAN ====
           rmdir /s /q dist 2>nul
           rmdir /s /q build 2>nul
 
-          pyinstaller --onefile --name A380X_AI --distpath dist --workpath build tools\run_ai.py
+          echo ==== BUILD EXE ====
+          pyinstaller --onefile --name A380X_AI tools\run_ai.py
 
-          echo ---- dist listing ----
-          dir dist
+          echo ==== DIST LISTING ====
+          dir dist /s
+
           if not exist "dist\A380X_AI.exe" (
-            echo WARN: dist\A380X_AI.exe nicht gefunden (evtl. Unterordner). Zeige dist rekursiv:
-            dir dist /s
+            echo ERROR: dist\A380X_AI.exe wurde nicht erstellt
+            exit /b 1
           )
+          echo EXE OK: dist\A380X_AI.exe
 
       - name: Install Inno Setup
         shell: cmd
         run: |
           @echo off
           choco install innosetup -y --no-progress
+          if not exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (
+            echo ERROR: ISCC.exe nicht gefunden
+            dir "C:\Program Files (x86)\Inno Setup 6"
+            exit /b 1
+          )
 
-      - name: Build installer
+      - name: Build installer (Inno Setup)
         shell: cmd
         run: |
           @echo off
@@ -98,21 +83,21 @@ jobs:
             dir Installateur
             exit /b 1
           )
+
+          rmdir /s /q "Installateur\Output" 2>nul
+          mkdir "Installateur\Output" 2>nul
+
           "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "Installateur\A380X_AI_Setup.iss"
 
-          echo ---- Installer Output ----
-          if exist "Installateur\Output" (
-            dir "Installateur\Output"
-          ) else (
-            echo WARN: Installateur\Output existiert nicht
-          )
+          echo ==== INSTALLER OUTPUT ====
+          dir "Installateur\Output" /s
 
-      - name: Upload build artifacts (always)
+      - name: Upload artifacts (always)
         uses: actions/upload-artifact@v4
         with:
           name: A380X_AI_Build
           path: |
-            dist/**
+            dist/A380X_AI.exe
             Installateur/Output/**
 
       - name: Upload Setup.exe to GitHub Release (only on release)
