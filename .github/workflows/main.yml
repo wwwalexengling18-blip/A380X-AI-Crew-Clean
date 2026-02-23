@@ -1,102 +1,41 @@
-name: Build A380X AI Crew Setup
+name: Build A380X AI Crew
 
 on:
-  workflow_dispatch:
   push:
-    branches: [ "main" ]
-  release:
-    types: [ created ]
-
-permissions:
-  contents: write
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Repo auschecken
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Python installieren
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Install Python deps
-        shell: cmd
-        run: |
-          @echo off
-          python -m pip install --upgrade pip
-          if exist requirements.txt (
-            pip install -r requirements.txt
-          ) else (
-            echo WARN: requirements.txt nicht gefunden
-          )
-          pip install pyinstaller
+    - name: Dependencies installieren
+      run: |
+        pip install --upgrade pip
+        if exist requirements.txt pip install -r requirements.txt
 
-      - name: Build EXE
-  run: |
-    pip install pyinstaller
-    pyinstaller --onefile src/main.py --name A380X_AI
-          echo ==== CLEAN ====
-          rmdir /s /q dist 2>nul
-          rmdir /s /q build 2>nul
+    - name: EXE bauen (PyInstaller)
+      run: |
+        pip install pyinstaller
+        pyinstaller --onefile src/main.py --name A380X_AI
 
-          echo ==== BUILD EXE ====
-          pyinstaller --onefile --name A380X_AI tools\run_ai.py
+    - name: Inno Setup installieren
+      run: choco install innosetup -y
 
-          echo ==== DIST LISTING ====
-          dir dist /s
+    - name: Installer bauen
+      run: |
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" Installateur\A380X_AI_Setup.iss
 
-          if not exist "dist\A380X_AI.exe" (
-            echo ERROR: dist\A380X_AI.exe wurde nicht erstellt
-            exit /b 1
-          )
-          echo EXE OK: dist\A380X_AI.exe
-
-      - name: Install Inno Setup
-        shell: cmd
-        run: |
-          @echo off
-          choco install innosetup -y --no-progress
-          if not exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (
-            echo ERROR: ISCC.exe nicht gefunden
-            dir "C:\Program Files (x86)\Inno Setup 6"
-            exit /b 1
-          )
-
-      - name: Build installer (Inno Setup)
-        shell: cmd
-        run: |
-          @echo off
-          if not exist "Installateur\A380X_AI_Setup.iss" (
-            echo ERROR: Installateur\A380X_AI_Setup.iss nicht gefunden
-            dir Installateur
-            exit /b 1
-          )
-
-          rmdir /s /q "Installateur\Output" 2>nul
-          mkdir "Installateur\Output" 2>nul
-
-          "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "Installateur\A380X_AI_Setup.iss"
-
-          echo ==== INSTALLER OUTPUT ====
-          dir "Installateur\Output" /s
-
-      - name: Upload artifacts (always)
-        uses: actions/upload-artifact@v4
-        with:
-          name: A380X_AI_Build
-          path: |
-            dist/A380X_AI.exe
-            Installateur/Output/**
-
-      - name: Upload Setup.exe to GitHub Release (only on release)
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            Installateur/Output/*.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Artefakt hochladen
+      uses: actions/upload-artifact@v4
+      with:
+        name: A380X_AI_Setup
+        path: Installateur\Output\*.exe
