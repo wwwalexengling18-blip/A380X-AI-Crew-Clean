@@ -16,12 +16,14 @@ SolidCompression=yes
 [Languages]
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 
+Source: "..\A380X_AI_Run.cmd"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\dist\A380X_AI.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\dist\A380X_AI.exe'))
 Source: "..\dist\A380X_AI\A380X_AI.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\dist\A380X_AI\A380X_AI.exe'))
 
 [Icons]
 Name: "{group}\A380X AI Crew"; Filename: "{app}\A380X_AI.exe"
 Name: "{group}\Uninstall A380X AI Crew"; Filename: "{uninstallexe}"
+Name: "{group}\A380X AI Crew (CMD offen)"; Filename: "{cmd}"; Parameters: "/k ""{app}\A380X_AI_Run.cmd"""
 
 [Run]
-Filename: "{app}\A380X_AI.exe"; Description: "A380X AI Crew starten"; Flags: nowait postinstall skipifsilent
+Filename: "{cmd}"; Parameters: "/k ""{app}\A380X_AI_Run.cmd"""; Description: "A380X AI Crew starten (CMD offen)"; Flags: postinstall skipifsilent
