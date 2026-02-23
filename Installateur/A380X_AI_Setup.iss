@@ -16,9 +16,8 @@ SolidCompression=yes
 [Languages]
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 
-[Files]
-; PyInstaller erzeugt dist\A380X_AI.exe
-Source: "..\dist\A380X_AI.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\A380X_AI.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\dist\A380X_AI.exe'))
+Source: "..\dist\A380X_AI\A380X_AI.exe"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\dist\A380X_AI\A380X_AI.exe'))
 
 [Icons]
 Name: "{group}\A380X AI Crew"; Filename: "{app}\A380X_AI.exe"
