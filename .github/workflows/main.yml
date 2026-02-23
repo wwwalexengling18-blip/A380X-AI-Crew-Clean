@@ -18,11 +18,17 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Dependencies installieren
-        run: |
-          python -m pip install --upgrade pip
-          if exist requirements.txt (pip install -r requirements.txt)
-          pip install pyinstaller
+
+- name: Dependencies installieren
+  shell: cmd
+  run: |
+    python -m pip install --upgrade pip
+    if exist requirements.txt (
+      pip install -r requirements.txt
+    )
+    pip install pyinstaller
+
+      
 
       - name: Portable EXE bauen
         shell: cmd
