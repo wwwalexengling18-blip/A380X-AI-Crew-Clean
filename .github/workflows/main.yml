@@ -1,7 +1,8 @@
-name: Build A380X AI Crew
+name: Build A380X AI Crew Setup
 
 on:
   push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -9,37 +10,49 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Repo auschecken
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Python installieren
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path "requirements.txt") {
+            pip install -r requirements.txt
+          } else {
+            Write-Host "requirements.txt not found - skipping"
+          }
+          pip install pyinstaller
 
-- name: Dependencies installieren
-  run: |
-    pip install --upgrade pip
-    if (Test-Path "requirements.txt") {
-        pip install -r requirements.txt
-    }
-    
+      - name: Build EXE (PyInstaller)
+        shell: pwsh
+        run: |
+          if (!(Test-Path "src/main.py")) { throw "src/main.py not found" }
+          pyinstaller --noconfirm --clean --onefile "src/main.py" --name "A380X_AI"
+          if (!(Test-Path "dist/A380X_AI.exe")) { throw "dist/A380X_AI.exe not created" }
 
-    - name: EXE bauen (PyInstaller)
-      run: |
-        pip install pyinstaller
-        pyinstaller --onefile src/main.py --name A380X_AI
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          if (!(Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) { throw "ISCC.exe not found" }
 
-    - name: Inno Setup installieren
-      run: choco install innosetup -y
+      - name: Build Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          if (!(Test-Path "Installateur/A380X_AI_Setup.iss")) { throw "Installateur/A380X_AI_Setup.iss not found" }
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "Installateur/A380X_AI_Setup.iss"
+          if (!(Test-Path "Installateur/Output")) { throw "Installateur/Output not created" }
 
-    - name: Installer bauen
-      run: |
-        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" Installateur\A380X_AI_Setup.iss
-
-    - name: Artefakt hochladen
-      uses: actions/upload-artifact@v4
-      with:
-        name: A380X_AI_Setup
-        path: Installateur\Output\*.exe
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: A380X_AI_Build
+          path: |
+            dist/A380X_AI.exe
+            Installateur/Output/*.exe
