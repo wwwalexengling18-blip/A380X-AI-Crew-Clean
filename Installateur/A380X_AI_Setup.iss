@@ -1,40 +1,41 @@
 #define MyAppName "A380X AI Crew"
+#define MyAppExeName "A380X_AI.exe"
 #define MyAppVersion "0.1.0"
-#define MyAppPublisher "OpenAI + User Custom Repo"
-#define MyAppExeName "A380X_AICrew.exe"
 
 [Setup]
-AppId={{E1E1E1E1-1A38-4A80-8A38-000000000001}
+AppId={{A8F5D7C8-9F7B-4B27-9B2F-9A1D2C0F9E11}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\A380X AI Crew
-DefaultGroupName=A380X AI Crew
-DisableProgramGroupPage=yes
+DefaultDirName={userdocs}\FBW_A380_Tools\A380-AI-Crew
+DefaultGroupName={#MyAppName}
+OutputDir=Output
+OutputBaseFilename=A380X_AI_Setup
 Compression=lzma
 SolidCompression=yes
-OutputDir=..\dist_installer
-OutputBaseFilename=A380X_AI_Crew_Setup
-WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64
 
 [Languages]
-Name: "german"; MessagesFile: "compiler:Languages\\German.isl"
-Name: "english"; MessagesFile: "compiler:Default.isl"
-
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 
 [Files]
-Source: "..\\dist\\A380X_AICrew\\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "..\\README.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\\docs\\*"; DestDir: "{app}\\docs"; Flags: recursesubdirs createallsubdirs ignoreversion
+; ✅ DAS ist der wichtige Teil:
+; PyInstaller legt die EXE hier ab: dist\A380X_AI\A380X_AI.exe
+Source: "..\dist\A380X_AI\A380X_AI.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+; Optional: Tools / SOPs / Config
+Source: "..\tools\*"; DestDir: "{app}\tools"; Flags: recursesubdirs ignoreversion
+Source: "..\src\*"; DestDir: "{app}\src"; Flags: recursesubdirs ignoreversion
+Source: "..\sop\*"; DestDir: "{app}\sop"; Flags: recursesubdirs ignoreversion
+Source: "..\requirements.txt"; DestDir: "{app}"; Flags: ignoreversion
+
+; CMD-Starter (wenn vorhanden)
+Source: "..\A380X_AI_Run.cmd"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\A380X_AI_Run.cmd'))
+Source: "..\A380X_AI_Doctor.cmd"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\A380X_AI_Doctor.cmd'))
+Source: "..\A380X_AI_Install.cmd"; DestDir: "{app}"; Flags: ignoreversion; Check: FileExists(ExpandConstant('{src}\..\A380X_AI_Install.cmd'))
 
 [Icons]
-Name: "{group}\\A380X AI Crew"; Filename: "{app}\\{#MyAppExeName}"
-Name: "{group}\\A380X AI Crew Doctor"; Filename: "{app}\\{#MyAppExeName}"; Parameters: "doctor"
-Name: "{group}\\A380X AI Crew SOP Schritte"; Filename: "{app}\\{#MyAppExeName}"; Parameters: "list-steps"
-Name: "{autodesktop}\\A380X AI Crew"; Filename: "{app}\\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{group}\A380X AI Crew (Run)"; Filename: "{app}\A380X_AI.exe"
+Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\\{#MyAppExeName}"; Description: "{cm:LaunchProgram,A380X AI Crew}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\A380X_AI.exe"; Description: "A380X AI Crew starten"; Flags: nowait postinstall skipifsilent
