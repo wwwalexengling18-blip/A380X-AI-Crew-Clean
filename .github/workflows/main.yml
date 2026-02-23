@@ -35,18 +35,10 @@ jobs:
           )
           pip install pyinstaller
 
-      - name: Build portable EXE (PyInstaller)
-        shell: cmd
-        run: |
-          @echo off
-          echo ==== CHECK FILES ====
-          dir
-          if not exist "tools\run_ai.py" (
-            echo ERROR: tools\run_ai.py nicht gefunden
-            echo TIP: Stelle sicher, dass die Datei im Repo-Root unter tools\run_ai.py liegt.
-            exit /b 1
-          )
-
+      - name: Build EXE
+  run: |
+    pip install pyinstaller
+    pyinstaller --onefile src/main.py --name A380X_AI
           echo ==== CLEAN ====
           rmdir /s /q dist 2>nul
           rmdir /s /q build 2>nul
