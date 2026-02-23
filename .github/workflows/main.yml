@@ -35,15 +35,41 @@ jobs:
           )
           pip install pyinstaller
 
-      - name: Build portable EXE
-        shell: cmd
-        run: |
-          @echo off
-          if not exist "tools\run_ai.py" (
-            echo ERROR: tools\run_ai.py nicht gefunden. Bitte Projektdateien im Repo-Root hochladen.
-            dir
-            exit /b 1
-          )
+
+
+- name: Build portable EXE
+  shell: cmd
+  run: |
+    @echo off
+    echo ==== CHECK PROJECT ====
+    dir
+
+    if not exist "tools\run_ai.py" (
+      echo ERROR: tools\run_ai.py fehlt
+      exit /b 1
+    )
+
+    echo ==== CLEAN OLD BUILDS ====
+    rmdir /s /q dist 2>nul
+    rmdir /s /q build 2>nul
+
+    echo ==== BUILD EXE ====
+    pyinstaller --onefile --name A380X_AI tools\run_ai.py
+
+    echo ==== DIST CONTENT ====
+    dir dist /s
+
+    if exist "dist\A380X_AI.exe" (
+      echo EXE OK
+    ) else (
+      echo ERROR: EXE fehlt
+      exit /b 1
+    )
+
+    echo ==== BUILD STEP DONE ====
+
+
+      
 
           rmdir /s /q dist 2>nul
           rmdir /s /q build 2>nul
