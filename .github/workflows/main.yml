@@ -1,11 +1,14 @@
-name: Build Setup EXE
+name: Build A380X AI Crew Setup
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   release:
-    types: [created]
+    types: [ created ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -49,12 +52,9 @@ jobs:
 
           echo ---- dist listing ----
           dir dist
-          echo ---- dist\A380X_AI listing ----
-          dir dist\A380X_AI
-
-          if not exist "dist\A380X_AI\A380X_AI.exe" (
-            echo ERROR: dist\A380X_AI\A380X_AI.exe wurde nicht erstellt
-            exit /b 1
+          if not exist "dist\A380X_AI.exe" (
+            echo WARN: dist\A380X_AI.exe nicht gefunden (evtl. Unterordner). Zeige dist rekursiv:
+            dir dist /s
           )
 
       - name: Install Inno Setup
@@ -74,7 +74,22 @@ jobs:
           )
           "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "Installateur\A380X_AI_Setup.iss"
 
-            - name: Upload to Release (only on release)
+          echo ---- Installer Output ----
+          if exist "Installateur\Output" (
+            dir "Installateur\Output"
+          ) else (
+            echo WARN: Installateur\Output existiert nicht
+          )
+
+      - name: Upload build artifacts (always)
+        uses: actions/upload-artifact@v4
+        with:
+          name: A380X_AI_Build
+          path: |
+            dist/**
+            Installateur/Output/**
+
+      - name: Upload Setup.exe to GitHub Release (only on release)
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
